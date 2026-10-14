@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131c"><meta name="description" content="Phone-friendly Solana meme coin discovery scanner">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Solana Scout</title>
+<style>
+:root{color-scheme:dark;--bg:#10131c;--panel:#191e2b;--line:#2b3345;--muted:#9ca8bd;--text:#f4f7ff;--green:#52e0a1;--yellow:#ffd166;--red:#ff7185;--blue:#8eabff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1d2740 0,var(--bg) 55%);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:900px;margin:auto;padding:env(safe-area-inset-top) 14px calc(30px + env(safe-area-inset-bottom))}
+header{padding:22px 4px 16px;display:flex;align-items:center;gap:12px}.logo{width:45px;height:45px;border-radius:14px;background:linear-gradient(135deg,#6f75ff,#48e0b0);display:grid;place-items:center;font-size:24px;color:#10131c;font-weight:900}
+h1{font-size:24px;margin:0;letter-spacing:-.5px} .sub{color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.panel{background:rgba(25,30,43,.94);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}
+button,select,input{font:inherit;border-radius:12px;border:1px solid var(--line);background:#111622;color:var(--text);padding:11px 12px}button{cursor:pointer;font-weight:700}button.primary{background:var(--green);border-color:var(--green);color:#08160f}button:disabled{opacity:.5}
+.controls button{flex:1}.status{color:var(--muted);font-size:12px;margin-top:10px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{background:#111622;border-radius:13px;padding:11px}.metric b{display:block;font-size:20px}.metric span{font-size:11px;color:var(--muted)}
+h2{font-size:16px;margin:0 0 10px}.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px}.filters label{font-size:12px;color:var(--muted);display:grid;gap:5px}
+.coin{padding:14px 0;border-bottom:1px solid var(--line)}.coin:last-child{border-bottom:0}.coinhead{display:flex;justify-content:space-between;gap:10px}.name{font-weight:800;font-size:16px;overflow-wrap:anywhere}.symbol{color:var(--muted);font-size:12px}.score{white-space:nowrap;border-radius:10px;padding:5px 8px;background:#263c39;color:var(--green);font-size:12px;font-weight:800;height:max-content}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.stat{background:#111622;padding:8px;border-radius:10px;min-width:0}.stat small{display:block;color:var(--muted);font-size:10px}.stat b{font-size:13px;overflow-wrap:anywhere}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.tag{font-size:10px;border-radius:7px;padding:4px 6px;background:#273044;color:#d5ddf1}.tag.warn{background:#4a3821;color:var(--yellow)}.tag.danger{background:#4b2630;color:#ffb1bd}.tag.good{background:#1d4038;color:var(--green)}
+.links{display:flex;gap:8px;flex-wrap:wrap}.links a{font-size:12px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 9px}.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted)}.warning{border-left:3px solid var(--yellow);padding:9px 11px;background:#2c281e;border-radius:8px;font-size:12px;color:#ffe4a1}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
+@media(min-width:650px){main{padding-left:22px;padding-right:22px}.coin{padding:16px 0}}
+</style></head>
+<body><main>
+<header><div class="logo">S</div><div><h1>Solana Scout</h1><div class="sub">Early meme coin discovery · mobile scanner</div></div></header>
+<section class="panel">
+ <div class="row controls"><button id="scan" class="primary">Scan now</button><button id="auto">Auto-scan: Off</button><button id="notify">Enable alerts</button></div>
+ <div class="status" id="status">Ready. Tap Scan now to load recent Solana token profiles and market data.</div>
+ <div class="metrics" style="margin-top:13px"><div class="metric"><b id="found">—</b><span>Pairs checked</span></div><div class="metric"><b id="matches">—</b><span>Early-watch matches</span></div><div class="metric"><b id="updated">—</b><span>Last scan</span></div></div>
+</section>
+<section class="panel">
+ <h2>Discovery filters</h2><div class="filters">
+ <label>Minimum liquidity ($)<select id="minLiq"><option value="1000">$1,000</option><option value="2500" selected>$2,500</option><option value="5000">$5,000</option><option value="10000">$10,000</option></select></label>
+ <label>Maximum pair age<select id="maxAge"><option value="6">6 hours</option><option value="24" selected>24 hours</option><option value="72">3 days</option><option value="168">7 days</option></select></label>
+ <label>Minimum 24h volume ($)<select id="minVol"><option value="500">$500</option><option value="1000" selected>$1,000</option><option value="5000">$5,000</option><option value="10000">$10,000</option></select></label>
+ <label>Minimum 1h transactions<select id="minTx"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option></select></label>
+ </div><p class="note">Filters are deliberately adjustable. Very new tokens may not yet have reliable data.</p>
+</section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2>Early-watch candidates</h2><span class="sub" id="countLabel">0 shown</span></div>
+<div class="warning">A score is a sorting aid, not a safety verdict or buy signal. New meme coins can go to zero, be unsellable, or have fake volume.</div>
+<div id="results"><div class="empty">Your scan results will appear here.</div></div></section>
+<section class="panel"><h2>Using a $25 budget</h2><p class="note">This scanner does not trade or connect to a wallet. For a $25 starting budget, consider paper-trading first. If you later trade, remember network/DEX fees, slippage, and the risk of losing the entire amount. Never paste a seed phrase into a scanner.</p></section>
+<footer>Market data: DEX Screener public API · Not financial advice · No automatic purchases</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let autoTimer=null, knownAlerts=new Set(), lastCoins=[];
+const fmt=n=>!Number.isFinite(Number(n))?'—':Number(n)>=1e6?'$'+(Number(n)/1e6).toFixed(2)+'m':Number(n)>=1e3?'$'+(Number(n)/1e3).toFixed(1)+'k':'$'+Number(n).toFixed(Number(n)<1?6:2);
+const ageHours=ts=>ts?Math.max(0,(Date.now()-ts)/3600000):Infinity;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('API returned '+r.status);return r.json()}
+function scorePair(p){
+ const age=ageHours(p.pairCreatedAt),liq=Number(p.liquidity?.usd)||0,vol=Number(p.volume?.h24)||0;
+ const h1=p.txns?.h1||{},h24=p.txns?.h24||{},buys=Number(h1.buys)||0,sells=Number(h1.sells)||0,tx=buys+sells;
+ const change=Number(p.priceChange?.h1)||0,volRatio=liq?vol/liq:0;
+ let s=0;
+ if(age<=6)s+=20;else if(age<=24)s+=16;else if(age<=72)s+=8;
+ if(liq>=10000)s+=20;else if(liq>=5000)s+=16;else if(liq>=2500)s+=12;else if(liq>=1000)s+=6;
+ if(vol>=10000)s+=18;else if(vol>=5000)s+=14;else if(vol>=1000)s+=9;else if(vol>=500)s+=4;
+ if(tx>=50)s+=15;else if(tx>=20)s+=11;else if(tx>=10)s+=7;else if(tx>=5)s+=3;
+ if(buys>sells && tx>0)s+=Math.min(12,Math.round((buys/(sells||1)-1)*4)+4);
+ if(change>0&&change<80)s+=Math.min(10,Math.round(change/10)+2);else if(change>=80)s+=2;
+ if(volRatio>0.05&&volRatio<8)s+=5;
+ if(liq<2500)s-=15;if(sells===0&&buys>5)s-=8;if(change>150)s-=8;
+ return Math.max(0,Math.min(100,s));
+}
+function render(coins){
+ $('countLabel').textContent=coins.length+' shown';
+ if(!coins.length){$('results').innerHTML='<div class="empty">No candidates passed these filters. Try lowering a threshold or scan again later.</div>';return}
+ $('results').innerHTML=coins.map(p=>{
+  const b=p.baseToken||{},age=ageHours(p.pairCreatedAt),liq=Number(p.liquidity?.usd)||0,vol=Number(p.volume?.h24)||0,tx=p.txns?.h1||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,score=scorePair(p),change=Number(p.priceChange?.h1)||0;
+  const risk=[];if(liq<5000)risk.push(['Thin liquidity','warn']);if(sells===0&&buys>5)risk.push(['No sells reported','danger']);if(change>100)risk.push(['Sharp 1h pump','warn']);if(age<1)risk.push(['Very new / sparse data','warn']);if(!p.info?.socials?.length)risk.push(['No social links listed','warn']);if(!(p.priceUsd>0))risk.push(['Price data missing','danger']);
+  return `<article class="coin"><div class="coinhead"><div><div class="name">${esc(b.name||'Unknown token')}</div><div class="symbol">${esc(b.symbol||'?')} · ${esc(p.dexId||'DEX')} · ${age<1?Math.round(age*60)+'m old':age<48?age.toFixed(1)+'h old':(age/24).toFixed(1)+'d old'}</div></div><div class="score">Watch ${score}/100</div></div>
+  <div class="stats"><div class="stat"><small>Price</small><b>${p.priceUsd?'$'+Number(p.priceUsd).toPrecision(5):'—'}</b></div><div class="stat"><small>Liquidity</small><b>${fmt(liq)}</b></div><div class="stat"><small>24h volume</small><b>${fmt(vol)}</b></div><div class="stat"><small>1h buys / sells</small><b>${buys} / ${sells}</b></div><div class="stat"><small>1h price change</small><b style="color:${change>=0?'var(--green)':'var(--red)'}">${change.toFixed(1)}%</b></div><div class="stat"><small>Market cap / FDV</small><b>${fmt(p.marketCap||p.fdv)}</b></div></div>
+  <div class="tags">${risk.map(([t,c])=>`<span class="tag ${c}">${esc(t)}</span>`).join('')}${!risk.length?'<span class="tag good">Basic filters passed</span>':''}</div>
+  <div class="links"><a href="${esc(p.url||'https://dexscreener.com/solana/'+b.address)}" target="_blank" rel="noopener">Open chart ↗</a><a href="https://solscan.io/token/${encodeURIComponent(b.address||'')}" target="_blank" rel="noopener">Solscan ↗</a><button data-copy="${esc(b.address||'')}" class="copy">Copy address</button></div></article>`;
+ }).join('');
+ document.querySelectorAll('.copy').forEach(btn=>btn.onclick=async()=>{try{await navigator.clipboard.writeText(btn.dataset.copy);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy address',1200)}catch{prompt('Copy token address:',btn.dataset.copy)}});
+}
+async function scan(){
+ $('scan').disabled=true;$('status').textContent='Fetching latest Solana profiles and market pairs…';
+ try{
+  const [profiles,boosts]=await Promise.all([
+   getJSON('https://api.dexscreener.com/token-profiles/latest/v1'),
+   getJSON('https://api.dexscreener.com/token-boosts/latest/v1').catch(()=>[])
+  ]);
+  const addresses=[...(Array.isArray(profiles)?profiles:[]),...(Array.isArray(boosts)?boosts:[])].filter(x=>x.chainId==='solana'&&x.tokenAddress).map(x=>x.tokenAddress);
+  const unique=[...new Set(addresses)].slice(0,25);
+  const results=await Promise.all(unique.map(addr=>getJSON('https://api.dexscreener.com/token-pairs/v1/solana/'+encodeURIComponent(addr)).catch(()=>[])));
+  const all=results.flat().filter(p=>p&&p.chainId==='solana'&&p.baseToken?.address&&p.pairCreatedAt);
+  const byToken=new Map();
+  for(const p of all){const addr=p.baseToken.address,old=byToken.get(addr);if(!old||(Number(p.liquidity?.usd)||0)>(Number(old.liquidity?.usd)||0))byToken.set(addr,p)}
+  const minLiq=+$('minLiq').value,maxAge=+$('maxAge').value,minVol=+$('minVol').value,minTx=+$('minTx').value;
+  const coins=[...byToken.values()].filter(p=>ageHours(p.pairCreatedAt)<=maxAge&&(Number(p.liquidity?.usd)||0)>=minLiq&&(Number(p.volume?.h24)||0)>=minVol&&((Number(p.txns?.h1?.buys)||0)+(Number(p.txns?.h1?.sells)||0))>=minTx).sort((a,b)=>scorePair(b)-scorePair(a));
+  lastCoins=coins;$('found').textContent=byToken.size;$('matches').textContent=coins.length;$('updated').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});$('status').textContent='Scan complete. Results are recent profile/boost tokens with available DEX pairs; this is not a complete feed of every new token.';
+  render(coins);
+  if($('notify').dataset.enabled==='true'&&'Notification'in window&&Notification.permission==='granted'){
+   for(const p of coins){const id=p.baseToken.address;if(!knownAlerts.has(id)){knownAlerts.add(id);new Notification('Solana Scout: early-watch candidate',{body:(p.baseToken.symbol||p.baseToken.name)+' · Watch score '+scorePair(p)+'/100 · '+fmt(p.liquidity?.usd)+' liquidity'});}}
+  }
+ }catch(e){$('status').textContent='Could not load market data: '+e.message+'. Check your connection and try again.';$('results').innerHTML='<div class="empty">API unavailable. Try again in a minute.</div>'}
+ finally{$('scan').disabled=false}
+}
+$('scan').onclick=scan;
+$('auto').onclick=()=>{if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('auto').textContent='Auto-scan: Off'}else{autoTimer=setInterval(scan,60000);$('auto').textContent='Auto-scan: On (1 min)';scan()}};
+$('notify').onclick=async()=>{if(!('Notification'in window)){alert('This browser does not support web notifications. Keep the scanner open to see results.');return}const p=await Notification.requestPermission();if(p==='granted'){$('notify').dataset.enabled='true';$('notify').textContent='Alerts enabled'}else alert('Notifications were not enabled. You can change browser notification permissions in Settings.')};
+if('serviceWorker'in navigator && location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script></body></html>
